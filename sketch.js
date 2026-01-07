@@ -1,7 +1,8 @@
-// Tree Generator with Varied Traits
-// Uses recursive branching to create unique tree and root structures
+// Organic Tree Generator with Flowing Lines and Hatching
+// Creates pen-drawn style trees with prominent root systems
 
 let treeTraits = {};
+let colorPalette = [];
 
 function setup() {
     createCanvas(800, 900);
@@ -16,159 +17,232 @@ function draw() {
 function generateTreeTraits() {
     // Generate random traits for this tree
     treeTraits = {
-        // Branch angle variation (degrees)
-        branchAngle: random(15, 35),
-        angleVariation: random(0, 15),
+        // Branch angle variation (degrees) - wider for more organic spread
+        branchAngle: random(20, 45),
+        angleVariation: random(5, 25),
 
-        // Branch length properties
-        lengthDecay: random(0.6, 0.75),
-        lengthVariation: random(0, 0.15),
+        // Branch length properties - more variation
+        lengthDecay: random(0.55, 0.70),
+        lengthVariation: random(0.1, 0.3),
 
         // Branching properties
-        minBranchLength: random(2, 8),
-        splitProbability: random(0.7, 1.0),
+        minBranchLength: random(3, 10),
+        splitProbability: random(0.65, 0.95),
 
-        // Visual properties
-        initialThickness: random(12, 20),
-        thicknessDecay: random(0.65, 0.75),
+        // Visual properties - thinner for more delicate pen effect
+        initialThickness: random(1, 2.5),
+        thicknessDecay: random(0.7, 0.85),
 
-        // Asymmetry and character
-        asymmetry: random(-0.3, 0.3),
-        curvature: random(-0.05, 0.05),
+        // Organic flow properties
+        curviness: random(0.15, 0.4), // How much curves bend
+        flowAngle: random(-15, 15), // Overall flow direction
 
-        // Root properties
-        rootDepth: random(0.5, 0.8),
-        rootSpread: random(0.8, 1.2),
+        // Root properties - MUCH bigger
+        rootDepth: random(1.2, 1.8), // Bigger than 1.0 means larger than tree
+        rootSpread: random(1.3, 2.0),
+        rootDensity: random(0.85, 1.0), // How often roots split
 
-        // Color variation
-        strokeHue: random(0, 30), // Brown tones
-        strokeSat: random(0, 30),
-        strokeBright: random(0, 40)
+        // Hatching properties
+        hatchDensity: random(0.3, 0.6),
+        hatchLength: random(3, 8)
     };
+
+    // Generate color palette with varied hues like the reference
+    colorPalette = [
+        color(random(0, 30), random(40, 80), random(30, 60)), // Reds/browns
+        color(random(200, 220), random(50, 90), random(40, 70)), // Blues
+        color(random(140, 180), random(50, 80), random(40, 70)), // Greens/teals
+        color(random(15, 45), random(60, 90), random(50, 80)) // Orange/rust
+    ];
 }
 
 function drawTree() {
     background(250, 248, 245);
+    noFill();
 
-    // Draw from center bottom
+    // Position tree higher to make more room for roots
     let startX = width / 2;
-    let startY = height * 0.65; // Position for ground level
+    let startY = height * 0.5; // Higher position for bigger root system
 
-    // Draw roots first (below ground)
+    // Draw massive root system first (below ground)
     push();
     translate(startX, startY);
-    stroke(35 + treeTraits.strokeHue, 25 + treeTraits.strokeSat, 20 + treeTraits.strokeBright);
-    strokeWeight(treeTraits.initialThickness * 0.8);
-    drawRoots(0, 0, -90, treeTraits.initialThickness * 0.8,
-              height * 0.25 * treeTraits.rootDepth, 0);
+    drawRoots(0, 0, -90, treeTraits.initialThickness * 1.2,
+              height * 0.35 * treeTraits.rootDepth, 0, 0);
     pop();
 
-    // Draw ground line
-    stroke(100, 80, 60);
-    strokeWeight(2);
-    line(0, startY, width, startY);
+    // Draw ground line with subtle variation
+    strokeWeight(1);
+    stroke(120, 100, 80, 150);
+    for (let i = 0; i < 3; i++) {
+        let offset = i * 2;
+        line(0, startY + offset, width, startY + offset);
+    }
 
     // Draw tree trunk and branches (above ground)
     push();
     translate(startX, startY);
-    stroke(30 + treeTraits.strokeHue, 20 + treeTraits.strokeSat, 15 + treeTraits.strokeBright);
-    strokeWeight(treeTraits.initialThickness);
-    drawBranch(0, 0, 90, treeTraits.initialThickness, height * 0.2, 0);
+    drawBranch(0, 0, 90, treeTraits.initialThickness, height * 0.25, 0, 0);
     pop();
 }
 
-function drawBranch(x, y, angle, thickness, length, depth) {
+function drawBranch(x, y, angle, thickness, length, depth, colorIndex) {
     // Stop condition
-    if (length < treeTraits.minBranchLength || depth > 12) {
+    if (length < treeTraits.minBranchLength || depth > 14) {
         return;
     }
 
-    // Calculate end point with curvature
-    let curve = treeTraits.curvature * length;
-    let endX = x + cos(radians(angle)) * length;
-    let endY = y - sin(radians(angle)) * length;
-
-    // Draw the branch
+    // Choose color from palette
+    let branchColor = colorPalette[colorIndex % colorPalette.length];
+    stroke(branchColor);
     strokeWeight(thickness);
 
-    // Add slight curve to branches
-    if (abs(curve) > 0.01) {
-        noFill();
-        let controlX = x + cos(radians(angle)) * length * 0.5 + curve * 10;
-        let controlY = y - sin(radians(angle)) * length * 0.5;
-        bezier(x, y, controlX, controlY, controlX, controlY, endX, endY);
-    } else {
-        line(x, y, endX, endY);
+    // Add organic curvature - branches flow and bend
+    let curveStrength = treeTraits.curviness * length;
+    let midAngle = angle + treeTraits.flowAngle + random(-10, 10);
+
+    // Create flowing bezier curve for organic look
+    let midX = x + cos(radians(midAngle)) * length * 0.5;
+    let midY = y - sin(radians(midAngle)) * length * 0.5;
+    midX += random(-curveStrength, curveStrength);
+    midY += random(-curveStrength * 0.5, curveStrength * 0.5);
+
+    let endAngle = angle + random(-15, 15) + treeTraits.flowAngle;
+    let endX = x + cos(radians(endAngle)) * length;
+    let endY = y - sin(radians(endAngle)) * length;
+
+    // Draw main branch with organic curve
+    bezier(x, y, midX, midY, midX, midY, endX, endY);
+
+    // Add hatching texture along the branch
+    if (thickness > 0.5 && random(1) < treeTraits.hatchDensity) {
+        drawHatching(x, y, endX, endY, midX, midY, thickness, branchColor);
     }
 
     // Decide whether to split
     if (random(1) < treeTraits.splitProbability) {
-        // Calculate new branch parameters
+        // Calculate new branch parameters with more variation
         let newLength = length * treeTraits.lengthDecay * random(1 - treeTraits.lengthVariation, 1 + treeTraits.lengthVariation);
         let newThickness = thickness * treeTraits.thicknessDecay;
 
-        // Left branch
-        let leftAngle = angle + treeTraits.branchAngle + random(-treeTraits.angleVariation, treeTraits.angleVariation);
-        leftAngle += treeTraits.asymmetry * 10;
-        drawBranch(endX, endY, leftAngle, newThickness, newLength, depth + 1);
+        // Number of branches (2-4 for organic spread)
+        let numBranches = floor(random(2, 4));
 
-        // Right branch
-        let rightAngle = angle - treeTraits.branchAngle + random(-treeTraits.angleVariation, treeTraits.angleVariation);
-        rightAngle -= treeTraits.asymmetry * 10;
-        drawBranch(endX, endY, rightAngle, newThickness, newLength, depth + 1);
+        for (let i = 0; i < numBranches; i++) {
+            let spreadAngle = map(i, 0, numBranches - 1, -treeTraits.branchAngle, treeTraits.branchAngle);
+            spreadAngle += random(-treeTraits.angleVariation, treeTraits.angleVariation);
+            let branchAngle = endAngle + spreadAngle;
 
-        // Sometimes add a middle branch for more complexity
-        if (depth < 6 && random(1) < 0.3) {
-            let middleAngle = angle + random(-10, 10);
-            drawBranch(endX, endY, middleAngle, newThickness * 0.9, newLength * 0.8, depth + 1);
+            let branchLength = newLength * random(0.7, 1.1);
+            let branchThickness = newThickness * random(0.8, 1.0);
+
+            // Use different colors for variety
+            let nextColor = (colorIndex + floor(random(0, 2))) % colorPalette.length;
+            drawBranch(endX, endY, branchAngle, branchThickness, branchLength, depth + 1, nextColor);
         }
     } else {
-        // Continue straight with slight variation
-        let continueAngle = angle + random(-5, 5);
-        let continueLength = length * random(0.85, 0.95);
-        let continueThickness = thickness * 0.9;
-        drawBranch(endX, endY, continueAngle, continueThickness, continueLength, depth + 1);
+        // Continue with flowing curve
+        let continueAngle = endAngle + random(-20, 20);
+        let continueLength = length * random(0.75, 0.95);
+        let continueThickness = thickness * 0.88;
+        drawBranch(endX, endY, continueAngle, continueThickness, continueLength, depth + 1, colorIndex);
     }
 }
 
-function drawRoots(x, y, angle, thickness, length, depth) {
-    // Stop condition - roots are less deep than branches are tall
-    if (length < treeTraits.minBranchLength * 1.5 || depth > 8) {
+function drawRoots(x, y, angle, thickness, length, depth, colorIndex) {
+    // Stop condition - roots go DEEP
+    if (length < treeTraits.minBranchLength * 1.2 || depth > 12) {
         return;
     }
 
-    // Calculate end point
-    let endX = x + cos(radians(angle)) * length * treeTraits.rootSpread;
-    let endY = y - sin(radians(angle)) * length;
-
-    // Draw the root
+    // Choose color from palette (roots use all colors for visual interest)
+    let rootColor = colorPalette[colorIndex % colorPalette.length];
+    stroke(rootColor);
     strokeWeight(thickness);
-    line(x, y, endX, endY);
 
-    // Roots split more irregularly
-    if (random(1) < 0.8) {
-        let newLength = length * random(0.55, 0.75);
-        let newThickness = thickness * random(0.6, 0.8);
+    // Roots are more chaotic and organic than branches
+    let curveStrength = treeTraits.curviness * length * 1.5;
 
-        // Roots spread wider and more chaotically
-        let leftAngle = angle + random(20, 50);
-        drawRoots(endX, endY, leftAngle, newThickness, newLength, depth + 1);
+    // Create wild flowing curves for roots
+    let midAngle = angle + random(-30, 30);
+    let midX = x + cos(radians(midAngle)) * length * 0.6 * treeTraits.rootSpread;
+    let midY = y - sin(radians(midAngle)) * length * 0.6;
+    midX += random(-curveStrength, curveStrength);
+    midY += random(-curveStrength * 0.5, curveStrength * 0.5);
 
-        let rightAngle = angle - random(20, 50);
-        drawRoots(endX, endY, rightAngle, newThickness, newLength, depth + 1);
+    let endAngle = angle + random(-35, 35);
+    let endX = x + cos(radians(endAngle)) * length * treeTraits.rootSpread;
+    let endY = y - sin(radians(endAngle)) * length;
 
-        // Sometimes add additional root tendrils
-        if (random(1) < 0.4) {
-            let extraAngle = angle + random(-40, 40);
-            drawRoots(endX, endY, extraAngle, newThickness * 0.7, newLength * 0.8, depth + 1);
+    // Draw organic curved root
+    bezier(x, y, midX, midY, midX, midY, endX, endY);
+
+    // Add hatching to roots
+    if (thickness > 0.5 && random(1) < treeTraits.hatchDensity * 0.8) {
+        drawHatching(x, y, endX, endY, midX, midY, thickness, rootColor);
+    }
+
+    // Roots split very frequently - creating dense network
+    if (random(1) < treeTraits.rootDensity) {
+        let newLength = length * random(0.5, 0.8);
+        let newThickness = thickness * random(0.65, 0.85);
+
+        // Create 2-5 root branches for dense network
+        let numRoots = floor(random(2, 6));
+
+        for (let i = 0; i < numRoots; i++) {
+            // Wide spread angles for roots
+            let spreadAngle = map(i, 0, numRoots - 1, -70, 70);
+            spreadAngle += random(-25, 25);
+            let rootAngle = endAngle + spreadAngle;
+
+            let rootLength = newLength * random(0.6, 1.2);
+            let rootThickness = newThickness * random(0.7, 1.0);
+
+            // Cycle through colors
+            let nextColor = (colorIndex + floor(random(0, 3))) % colorPalette.length;
+            drawRoots(endX, endY, rootAngle, rootThickness, rootLength, depth + 1, nextColor);
         }
     } else {
-        // Continue with variation
-        let continueAngle = angle + random(-15, 15);
-        let continueLength = length * random(0.7, 0.9);
-        let continueThickness = thickness * 0.85;
-        drawRoots(endX, endY, continueAngle, continueThickness, continueLength, depth + 1);
+        // Continue root with wild variation
+        let continueAngle = endAngle + random(-40, 40);
+        let continueLength = length * random(0.65, 0.9);
+        let continueThickness = thickness * 0.82;
+        let nextColor = (colorIndex + floor(random(0, 2))) % colorPalette.length;
+        drawRoots(endX, endY, continueAngle, continueThickness, continueLength, depth + 1, nextColor);
     }
+}
+
+// Helper function to draw hatching texture along curves
+function drawHatching(x1, y1, x2, y2, midX, midY, thickness, col) {
+    push();
+    stroke(col);
+    strokeWeight(thickness * 0.3);
+
+    // Calculate direction perpendicular to the branch
+    let dx = x2 - x1;
+    let dy = y2 - y1;
+    let branchAngle = atan2(dy, dx);
+    let perpAngle = branchAngle + HALF_PI;
+
+    // Draw several hatch marks along the curve
+    let numHatches = floor(random(2, 5));
+    for (let i = 0; i < numHatches; i++) {
+        let t = random(0.2, 0.8);
+
+        // Approximate point on bezier curve
+        let px = lerp(lerp(x1, midX, t), lerp(midX, x2, t), t);
+        let py = lerp(lerp(y1, midY, t), lerp(midY, y2, t), t);
+
+        let hatchLen = treeTraits.hatchLength * random(0.8, 1.2);
+        let hx1 = px + cos(perpAngle + random(-0.3, 0.3)) * hatchLen * 0.5;
+        let hy1 = py + sin(perpAngle + random(-0.3, 0.3)) * hatchLen * 0.5;
+        let hx2 = px - cos(perpAngle + random(-0.3, 0.3)) * hatchLen * 0.5;
+        let hy2 = py - sin(perpAngle + random(-0.3, 0.3)) * hatchLen * 0.5;
+
+        line(hx1, hy1, hx2, hy2);
+    }
+    pop();
 }
 
 function generateNewTree() {
